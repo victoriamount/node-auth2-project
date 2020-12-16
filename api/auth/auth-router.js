@@ -29,7 +29,25 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
     const { username, password } = req.body
 
-    
+    if (verifyCredentials(req.body)) {
+        Users.findBy({ username: username })
+            .then(([user]) => {
+                if (user && bcryptjs.compareSync(password, user.password)) {
+                    const token = makeToken(user)
+                    res.status(200).json({
+                        message: 'Welcome to the API, ' + user.username, 
+                        token: token
+                    })
+                } else {
+                    res.status(401).json('You shall not pass!')
+                }
+            })
+            .catch(err => {
+                res.status(500).json(err.message)
+            })
+    } else {
+        res.status(400).json('Invalid credentials, please supply username and an alphanumeric password')
+    }
 })
 
 function makeToken(user) {
